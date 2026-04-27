@@ -80,11 +80,14 @@ defmodule MiniDiscord.ClientHandler do
 
       "/join " <> nom ->
         MiniDiscord.Salon.quitter(salon, self())
-        rejoindre_salon(socket,pseudo,nom)
+        rejoindre_salon(socket, pseudo, nom)
 
       "/quit" ->
         MiniDiscord.Salon.quitter(salon, self())
-
+        liberer_pseudo(pseudo)
+        :gen_tcp.send(socket, "À bientôt!\r\n")
+        :gen_tcp.close(socket)
+        exit(:normal)
       _ ->
         :gen_tcp.send(socket, "Commande inconnue\r\n")
         loop(socket,pseudo,salon)

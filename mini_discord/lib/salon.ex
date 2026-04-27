@@ -2,27 +2,37 @@ defmodule MiniDiscord.Salon do
   use GenServer
 
   def start_link(name) do
-    GenServer.start_link(__MODULE__, %{name: name, clients: [], historique: []},
+    GenServer.start_link(__MODULE__, %{name: name, clients: [], historique: [], password: nil},
       name: via(name))
   end
 
-  def rejoindre(salon, pid), do: GenServer.call(via(salon), {:rejoindre, pid})
+  def rejoindre(salon, pid,password \\ nil), do: GenServer.call(via(salon), {:rejoindre, pid,password})
   def quitter(salon, pid),   do: GenServer.call(via(salon), {:quitter, pid})
   def broadcast(salon, msg), do: GenServer.cast(via(salon), {:broadcast, msg})
+  def definir_password(salon, password), do: GenServer.call(via(salon), {:password, password})
   def lister do
     Registry.select(MiniDiscord.Registry, [{{:"$1", :_, :_}, [], [:"$1"]}])
   end
 
   def init(state), do: {:ok, state}
 
-  def handle_call({:rejoindre, pid}, _from, state) do
-    Process.monitor(pid)
-    Enum.each(Enum.reverse(state.historique), fn msg -> send(pid, {:message, msg}) end)
-    {:reply, :ok, %{state | clients: [pid | state.clients]}}
+  def handle_call({:rejoindre, pid, password}, _from, state) do
+    if state.password != nil and state.password != :crypto.hash(:sha256, password) do
+      {:reply, {:error, :wrong_password}, state}
+    else
+      Process.monitor(pid)
+      Enum.each(Enum.reverse(state.historique), fn msg -> send(pid, {:message, msg}) end)
+      {:reply, :ok, %{state | clients: [pid | state.clients]}}
+    end
   end
 
   def handle_call({:quitter, pid}, _from, state) do
     {:reply, :ok, %{state | clients: Enum.filter(state.clients, fn x -> x != pid end)}}
+  end
+
+  def handle_call({:password, password}, _from, state) do
+    hashed = :crypto.hash(:sha256, password)
+    {:reply, :ok, %{state | password: hashed}}
   end
 
   def handle_cast({:broadcast, msg}, state) do
