@@ -16,6 +16,8 @@
 
 # Question 4 : Le salon redémarre-t-il après le kill ? Pourquoi ? 
 
-# Le salon ne redémarre pas après le kill car il n'y a aucune commande permettant de gérer cette situation et de redémarer le salon
+# Le salon redémarre après le kill (on le voit en relançant un client et y faisant accéder ce salon), ce qui est dû au DynamicSupervisor utilisé pour les Salons, qui s'occupe de relancer les processus
 
-# Question 5 :
+# Question 5 : Quelle est la différence entre les stratégies :one_for_one et :one_for_all ?
+
+# Avec la stratégie :one_for_one, quans un processus salon est tué, seul celui-ci est redémarré. En utilisant la stratégie :one_for_all, quand un processus salon est tué, tous les salons seraient arrêtés puis redémarrés
