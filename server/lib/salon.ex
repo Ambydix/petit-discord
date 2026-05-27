@@ -17,13 +17,18 @@ defmodule MiniDiscord.Salon do
   def init(state), do: {:ok, state}
 
   def handle_call({:rejoindre, pid, password}, _from, state) do
-    if state.password != nil and state.password != :crypto.hash(:sha256, password) do
+  cond do
+    state.password != nil and password == nil ->
       {:reply, {:error, :wrong_password}, state}
-    else
+
+    state.password != nil and :crypto.hash(:sha256, password) != state.password ->
+      {:reply, {:error, :wrong_password}, state}
+
+    true ->
       Process.monitor(pid)
       Enum.each(Enum.reverse(state.historique), fn msg -> send(pid, {:message, msg}) end)
       {:reply, :ok, %{state | clients: [pid | state.clients]}}
-    end
+  end
   end
 
   def handle_call({:quitter, pid}, _from, state) do
