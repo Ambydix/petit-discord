@@ -1,4 +1,4 @@
-# MiniDiscord
+# TP 1 MiniDiscord
 
 
 # Question 1 : Pourquoi utilise-t-on Process.monitor/1 dans handle_call({:rejoindre}) ? 
